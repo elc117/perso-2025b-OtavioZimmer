@@ -120,7 +120,7 @@ main = do
     middleware logStdoutDev
 
     -- Serve o frontend
-    get "/" $ file "index.html"
+    get "/" $ file "pagina.html"
 
     -- API
     get "/acrostico" $ do
