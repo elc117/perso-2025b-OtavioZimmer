@@ -1,3 +1,5 @@
+-- Main.hs
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
@@ -5,14 +7,14 @@ import Web.Scotty
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import Control.Monad.IO.Class (liftIO)
 import System.Random (randomRIO)
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, object, (.=))
 import GHC.Generics (Generic)
 import Data.IORef
 import qualified Data.Text.Lazy as T
 import Web.Scotty (file)
 import Words (Entry(..), entries)
+import Data.Time (UTCTime, getCurrentTime, diffUTCTime)
 
--- Estrutura do acróstico, com vertical e horizontais
 data Acrostic = Acrostic
   { vertical    :: Entry
   , horizontals :: [Entry]
@@ -25,25 +27,39 @@ data GameState = GameState
   { verticalWord :: Entry
   , horizontalsW :: [Entry]
   , progress     :: [[Maybe Char]] -- progresso de cada palavra
+  , startTime    :: UTCTime        -- tempo de início do jogo
   } deriving (Generic, Show)
 
 instance ToJSON GameState
 
+-- Estrutura para receber dificuldade
+data Difficulty = Difficulty
+  { difficulty :: String -- "facil", "medio", "dificil"
+  } deriving (Show, Generic)
+
+instance FromJSON Difficulty
+
 -- Estrutura para receber uma tentativa
 data Try = Try
   { index    :: Int    -- índice da palavra horizontal
-  , position :: Int    -- posição da letra na palavra horizontal
+  , position :: Int    -- posição da letra
   , letter   :: Char   -- letra tentada
   } deriving (Show, Generic)
 
 instance FromJSON Try
 
--- Função que sorteia uma palavra vertical
-randomVertical :: IO Entry
-randomVertical = do
+-- Função que sorteia uma palavra vertical baseada na dificuldade
+randomVertical :: String -> IO Entry
+randomVertical diff = do
   let validEntries = filter (\e -> let firstLetter = head (word e) 
+                                       wordLength = length (word e)
                                    in firstLetter /= 'K' && firstLetter /= 'W'
-                                   && firstLetter /= 'Y') entries
+                                   && firstLetter /= 'Y'
+                                   && case diff of
+                                        "facil" -> wordLength <= 4
+                                        "medio" -> wordLength >= 5 && wordLength <= 7
+                                        "dificil" -> wordLength > 7
+                                        _ -> True) entries
   let n = length validEntries
   idx <- randomRIO (0, n-1)
   return (validEntries !! idx)
@@ -51,31 +67,34 @@ randomVertical = do
 -- Seleciona horizontais a partir das letras da vertical
 selectHorizontals :: String -> Entry -> IO [Entry]
 selectHorizontals verticalStr verticalEntry =
-  go verticalStr []  -- começa sem usados
+  go verticalStr []  -- começa sem palavras já usadas
   where
     go [] _ = return []
-    go (c:cs) usados = do
+    go (c:cs) used = do
       let candidates =
-            filter (\e -> not (null (word e)) -- word vem do módulo Words.hs
+            filter (\e -> not (null (word e))
                        && head (word e) == c
                        && word e /= word verticalEntry
-                       && e `notElem` usados) entries
+                       && e `notElem` used) entries
       chosen <-
         if null candidates
           then return (Entry [c] ("Sem palavra para " ++ [c]))
           else do
             idx <- randomRIO (0, length candidates - 1)
             return (candidates !! idx)
-      rest <- go cs (chosen : usados)
+      rest <- go cs (chosen : used)
       return (chosen : rest)
 
--- Cria novo jogo
-newGame :: IO GameState
-newGame = do
-  v <- randomVertical
-  hsw <- selectHorizontals (word v) v
-  let prog = zipWith (\e c -> Just c : replicate (length (word e) - 1) Nothing) hsw (word v)
-  return (GameState v hsw prog)
+-- Cria novo jogo com a dificuldade escolhida
+newGame :: String -> IO GameState
+newGame diff = do
+  currentTime <- getCurrentTime
+  v <- randomVertical diff
+  hs <- selectHorizontals (word v) v
+  let prog = zipWith (\e c -> Just c : replicate (length (word e) - 1) Nothing)
+                     hs
+                     (word v)
+  return (GameState v hs prog currentTime)
 
 -- Atualiza progresso com tentativa
 applyTry :: GameState -> Try -> GameState
@@ -99,9 +118,9 @@ applyTry gs t =
                         else gs
 
 -- Função para atualizar um caractere numa palavra
-updateChar :: Int -> Char -> [Maybe Char] -> [Maybe Char] -- Optei por utilizar Pattern Matching com recursão
+updateChar :: Int -> Char -> [Maybe Char] -> [Maybe Char]
 updateChar _ _ [] = []
-updateChar 0 newChar (x:xs) = Just newChar : xs
+updateChar 0 newChar (_:xs) = Just newChar : xs
 updateChar n newChar (x:xs) = x : updateChar (n-1) newChar xs
 
 -- Função para atualizar uma palavra na lista de palavras
@@ -113,29 +132,42 @@ updateWord n newWord (x:xs) = x : updateWord (n-1) newWord xs
 -- Função principal
 main :: IO ()
 main = do
-  game <- newGame
-  stateRef <- newIORef game
-
+  stateRef <- newIORef Nothing  -- inicia sem jogo
   scotty 3000 $ do
     middleware logStdoutDev
 
-    -- Serve o frontend
-    get "/" $ file "pagina.html"
+    -- Servindo o frontend
+    get "/" $ file "index.html"
 
     -- API
     get "/acrostico" $ do
-      gs <- liftIO (readIORef stateRef)
-      json gs
+      maybeGs <- liftIO (readIORef stateRef)
+      case maybeGs of
+        Just gs -> json gs
+        Nothing -> json (object []) -- retorna JSON vazio se não há jogo
 
-    -- Tentativa
+    -- Nova rota para obter tempo elapsed
+    get "/time" $ do
+      maybeGs <- liftIO (readIORef stateRef)
+      case maybeGs of
+        Just gs -> do
+          currentTime <- liftIO getCurrentTime
+          let elapsed = floor $ diffUTCTime currentTime (startTime gs)
+          json (object ["elapsed" .= (elapsed :: Integer)])
+        Nothing -> json (object ["elapsed" .= (0 :: Integer)])
+
     post "/try" $ do
       t <- jsonData :: ActionM Try
-      liftIO $ modifyIORef stateRef (\gs -> applyTry gs t)
-      gs <- liftIO (readIORef stateRef)
-      json gs
+      maybeGs <- liftIO (readIORef stateRef)
+      case maybeGs of
+        Just gs -> do
+          let newGs = applyTry gs t
+          liftIO (writeIORef stateRef (Just newGs))
+          json newGs
+        Nothing -> json (object []) -- sem jogo ativo
 
-    -- Iniciar um novo jogo, com palavras aleatórias
     post "/newgame" $ do
-      gs <- liftIO newGame
-      liftIO (writeIORef stateRef gs)
+      d <- jsonData :: ActionM Difficulty
+      gs <- liftIO (newGame (difficulty d))
+      liftIO (writeIORef stateRef (Just gs))
       json gs

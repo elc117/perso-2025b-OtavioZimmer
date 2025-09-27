@@ -1,8 +1,10 @@
+<!--index.html-->
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>🌟 Jogo Acróstico Cruzado 🌟</title>
+  <title>Jogo Acróstico Cruzado</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -22,9 +24,36 @@
       color: #333;
       margin-bottom: 20px;
     }
+    .timer {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      padding: 8px 12px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      font-weight: bold;
+      color: #333;
+    }
     .controls {
       text-align: center;
       margin-bottom: 20px;
+    }
+    .start-screen {
+      text-align: center;
+      padding: 50px;
+    }
+    .start-screen h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .start-screen p {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 16px;
     }
     button {
       padding: 10px 20px;
@@ -35,9 +64,63 @@
       background-color: #007bff;
       color: white;
       transition: 0.3s;
+      margin: 5px;
     }
     button:hover {
       background-color: #0056b3;
+    }
+    .start-btn {
+      padding: 15px 30px;
+      font-size: 18px;
+    }
+    .difficulty-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .difficulty-content {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    .difficulty-content h3 {
+      margin-top: 0;
+      color: #333;
+    }
+    .difficulty-btn {
+      display: block;
+      width: 200px;
+      margin: 10px auto;
+      padding: 15px;
+      font-size: 16px;
+    }
+    .difficulty-btn.facil {
+      background-color: #28a745;
+    }
+    .difficulty-btn.facil:hover {
+      background-color: #218838;
+    }
+    .difficulty-btn.medio {
+      background-color: #ffc107;
+      color: #000;
+    }
+    .difficulty-btn.medio:hover {
+      background-color: #e0a800;
+    }
+    .difficulty-btn.dificil {
+      background-color: #dc3545;
+    }
+    .difficulty-btn.dificil:hover {
+      background-color: #c82333;
     }
     .game-content {
       display: flex;
@@ -120,33 +203,125 @@
     .hint strong {
       color: #007bff;
     }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="game-container">
     <h1 class="title">🌟 Jogo Acróstico Cruzado 🌟</h1>
-    <div class="controls">
-      <button onclick="newGame()">Novo Jogo</button>
+    
+    <!-- Cronômetro -->
+    <div id="timer" class="timer hidden">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="#ffa500" stroke-width="2"/>
+        <polyline points="12,6 12,12 16,14" stroke="#ffa500" stroke-width="2"/>
+      </svg>
+      <span id="timerDisplay">00:00</span>
     </div>
-    <div class="game-content">
-      <div class="hints" id="hints"></div>
-      <div class="board" id="board"></div>
+    
+    <div id="startScreen" class="start-screen">
+      <h2>Bem-vindo ao Jogo do Acróstico Cruzado!</h2>
+      <p>Descubra as palavras horizontais usando a dica correspondente fornecida.<br>
+         A primeira letra de cada palavra forma uma palavra na vertical.</p>
+      <button class="start-btn" onclick="showDifficultyModal()">Iniciar Jogo</button>
+    </div>
+    
+    <div id="gameArea" class="hidden">
+      <div class="controls">
+        <button onclick="showStartScreen()">Novo Jogo</button>
+      </div>
+      <div class="game-content">
+        <div class="hints" id="hints"></div>
+        <div class="board" id="board"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="difficultyModal" class="difficulty-modal hidden">
+    <div class="difficulty-content">
+      <h3>Escolha a Dificuldade</h3>
+      <p>Fácil: até 4 palavras<br>
+         Médio: de 5 a 7 palavras<br>
+         Difícil: mais de 7 palavras</p>
+      <button class="difficulty-btn facil" onclick="newGameWithDifficulty('facil')">Fácil</button>
+      <button class="difficulty-btn medio" onclick="newGameWithDifficulty('medio')">Médio</button>
+      <button class="difficulty-btn dificil" onclick="newGameWithDifficulty('dificil')">Difícil</button>
     </div>
   </div>
 
   <script>
     let gameState = null;
+    let timerInterval = null;
 
-    async function loadGame() {
-      const res = await fetch("http://localhost:3000/acrostico");
-      gameState = await res.json();
-      renderBoard();
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      document.getElementById('timer').classList.remove('hidden');
+      
+      timerInterval = setInterval(async () => {
+        try {
+          const res = await fetch("http://localhost:3000/time");
+          const data = await res.json();
+          const elapsed = data.elapsed || 0;
+          const minutes = Math.floor(elapsed / 60);
+          const seconds = elapsed % 60;
+          document.getElementById('timerDisplay').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        } catch (error) {
+          console.error('Erro ao obter tempo:', error);
+        }
+      }, 1000);
     }
 
-    async function newGame() {
-      const res = await fetch("http://localhost:3000/newgame", { method: "POST" });
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      document.getElementById('timer').classList.add('hidden');
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      document.getElementById('timer').classList.add('hidden');
+    }
+
+    function showStartScreen() {
+      document.getElementById('startScreen').classList.remove('hidden');
+      document.getElementById('gameArea').classList.add('hidden');
+      stopTimer(); // Para o cronômetro quando volta ao início
+    }
+
+    function hideStartScreen() {
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('gameArea').classList.remove('hidden');
+    }
+
+    function showDifficultyModal() {
+      document.getElementById('difficultyModal').classList.remove('hidden');
+    }
+
+    function hideDifficultyModal() {
+      document.getElementById('difficultyModal').classList.add('hidden');
+    }
+
+    async function newGameWithDifficulty(diff) {
+      stopTimer();
+      document.getElementById('timerDisplay').textContent = "00:00";
+      const res = await fetch("http://localhost:3000/newgame", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ difficulty: diff })
+      });
       gameState = await res.json();
       renderBoard();
+      hideDifficultyModal();
+      hideStartScreen();
+      startTimer(); // Inicia o cronômetro
     }
 
     async function tryLetter(idx, pos, input) {
@@ -213,10 +388,6 @@
       }
     }
 
-    function moveToNextInputInSameRow(currentInput, currentRowIdx) {
-      // Esta função não é mais necessária, pois a lógica foi movida para dentro de tryLetter
-    }
-
     function renderBoard() {
       const board = document.getElementById("board");
       board.innerHTML = "";
@@ -268,11 +439,14 @@
                 return;
               }
               
-              // Se chegou aqui, é uma letra válida - limpa o campo antes
+              // Se é uma letra válida, limpa o campo e processa imediatamente
               input.value = '';
+              // Coloca a nova letra
+              setTimeout(() => {
+                input.value = e.key.toUpperCase();
+                tryLetter(idx, i, input);
+              }, 0);
             });
-            
-            input.addEventListener('input', () => tryLetter(idx, i, input));
             cell.appendChild(input);
           }
 
@@ -282,7 +456,8 @@
       });
     }
 
-    loadGame();
+    // Mostra tela de início
+    showStartScreen();
   </script>
 </body>
 </html>
