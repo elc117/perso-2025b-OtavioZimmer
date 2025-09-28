@@ -166,7 +166,7 @@ updateChar n newChar (x:xs) = x : updateChar (n-1) newChar xs -- Optei por usar 
 -- Função para atualizar uma palavra na lista de palavras
 updateWord :: Int -> [Maybe Char] -> [[Maybe Char]] -> [[Maybe Char]]
 updateWord _ _ [] = []
-updateWord 0 newWord (x:xs) = newWord : xs
+updateWord 0 newWord (_:xs) = newWord : xs
 updateWord n newWord (x:xs) = x : updateWord (n-1) newWord xs
 
 -- Função para calcular pontuação

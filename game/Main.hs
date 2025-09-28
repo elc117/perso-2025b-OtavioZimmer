@@ -7,15 +7,15 @@ module Main where
 
 import Web.Scotty
 import Network.Wai.Middleware.RequestLogger (logStdoutDev)
-import Control.Monad.IO.Class (liftIO)
+import Control.Monad.IO.Class ()
 import Data.Aeson (object, (.=))
 import Data.IORef
-import Words (Entry(..), entries)
+import Words ()
 import GameLogic
 import Data.Time.Clock (getCurrentTime, diffUTCTime)
 --SQLite imports
 import Database.SQLite.Simple
-import Database.SQLite.Simple.FromRow
+import Database.SQLite.Simple.FromRow ()
 
 -- Função principal
 main :: IO ()
