@@ -290,7 +290,7 @@ Abaixo, um vídeo demonstrando o resultado final do projeto.
   Vídeo de demonstração.
 </video>
 
-Caso não seja possível visualizá-lo, entre na pasta `video`, no repositório, e visualize-o por lá.
+Caso não seja possível visualizá-lo, entre na pasta `video`, no repositório, e visualize-o por lá. Ou, se preferir, visualize-o no seguinte link: https://drive.google.com/file/d/1kr6WkQz7gMRW-xTfDLqLiHWu0gWSAKvf/view?usp=sharing.
 
 # Conclusão
 O desenvolvimento deste projeto me permitiu aplicar na prática os conceitos serviços web com Haskell e Scotty. Foram implementadas rotas que lidam tanto com requisições de leitura (GET) quanto de escrita (POST), contemplando os requisitos mínimos do trabalho. Além disso, foi realizada a persistência dos dados em um banco SQLite, viabilizando um *Leaderboard* para registrar e exibir os melhores resultados das jogadas.
