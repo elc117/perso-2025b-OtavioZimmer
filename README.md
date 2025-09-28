@@ -261,6 +261,7 @@ Acima, o novo menu principal com a opção para visualizar o Placar das melhores
 Acima, o *Leaderboard* das 10 melhores Jogadas.
 
 Este foi o último passo realizado na criação do projeto.
+
 ## 7. Otimização
 Por último, decidi otimizar o projeto, criando um arquivo separado só para as funções (`GameLogic.hs`), deixando o `Main.hs` cuidar apenas das requisições `GET` e `POST`, com a lógica de jogo no outro arquivo. Isso ajudou muito para que eu pudesse criar o `Tests.hs`, ficando mais fácil de fazer os testes unitários de cada uma das funções que controlam a lógica do jogo.
 
@@ -278,6 +279,8 @@ runhaskell Tests.hs
 </pre>
 
 Os testes unitários irão ser executados em cada uma das funções.
+
+Após rodar os testes, obtive sucesso em todos eles.
 
 # Resultado final
 Abaixo, um vídeo demonstrando o resultado final do projeto.
@@ -305,4 +308,4 @@ Abaixo, listo as fontes utilizadas para realizar o projeto.
 - Recursão em Haskell: https://learnyouahaskell.com/recursion
 - Pattern Matching: https://learnyouahaskell.com/syntax-in-functions
 - SQLite.Simple: https://hackage.haskell.org/package/sqlite-simple/docs/Database-SQLite-Simple.html
-- Claude AI (prompt utilizado para gerar as palavras e as dicas, no formato estipulado): https://claude.ai
+- Claude AI (utilizado para gerar a API das palavras e dicas, no formato estipulado): https://claude.ai
