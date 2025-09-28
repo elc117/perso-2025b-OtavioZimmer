@@ -46,7 +46,7 @@ cabal run projeto
 Caso obtenha problemas ao instalar as dependências por meio do `cabal build`, segue, abaixo a alternativa:
 
 1. Clone o repositório em seu computador ou baixe individualmente os arquivos da pasta `game`.
-2. Baixe manualmente todas as dependências do projeto, de forma global:
+2. Baixe manualmente todas as dependências do projeto, de forma global, FORA da pasta do projeto:
 <pre>
 cabal update
 cabal install scotty
