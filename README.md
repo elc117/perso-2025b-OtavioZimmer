@@ -30,7 +30,7 @@ O jogador deve responder palavras horizontais baseadas em dicas, onde a primeira
 ## Orientações para execução (MODO 1)
 Para ambos os modos de execução, é necessário possuir o `ghc` e o `cabal` instalados em seu computador.
 
-1. Clone o repositório em seu computador.
+1. Clone o repositório em seu computador ou baixe individualmente os arquivos da pasta `game`.
 2. Instale as dependências:
 <pre>
 cabal update
@@ -40,12 +40,13 @@ cabal build
 <pre>
 cabal run projeto
 </pre>
-4. Abra o jogo no navegador, digitando `http://localhost:3000`. A página index.html será servida automaticamente.
+4. Abra o jogo no navegador, digitando `http://localhost:3000`. A página `index.html` (frontend) será servida automaticamente.
 
 ## Orientações para execução (MODO 2)
 Caso obtenha problemas ao instalar as dependências por meio do `cabal build`, segue, abaixo a alternativa:
 
-1. Baixe manualmente todas as dependências do projeto, de forma global:
+1. Clone o repositório em seu computador ou baixe individualmente os arquivos da pasta `game`.
+2. Baixe manualmente todas as dependências do projeto, de forma global:
 <pre>
 cabal update
 cabal install scotty
@@ -56,12 +57,12 @@ cabal install time
 cabal install sqlite-simple
 cabal install text
 </pre>
-2. Digite, na pasta do projeto:
+3. Digite, na pasta do projeto:
 <pre>
 ghc --make Main.hs GameLogic.hs -o jogo
 </pre>
-3. Rode o servidor com `./jogo` ou `jogo.exe`.
-4. Abra o jogo no navegador, digitando `http://localhost:3000`. A página index.html será servida automaticamente.
+4. Rode o servidor com `./jogo` ou `jogo.exe`.
+5. Abra o jogo no navegador, digitando `http://localhost:3000`. A página `index.html` (frontend) será servida automaticamente.
 
 # Ideia
 Inicialmente, fiquei em dúvida do que fazer. Depois de muito pensar, de repente visualizo minha mãe jogando um joguinho em seu celular. Então tive uma ideia: lembrei que ela gostava muito de jogar um jogo de celular chamado "Cody Cross". Com isso, decidi implementar um jogo de Acróstico Cruzado. É um jogo divertido, o qual eu gosto de jogar e que pode ser jogado por pessoas de qualquer idade. A lógica do jogo é a seguinte: há algumas palavras na horizontal para serem respondidas com base em dicas, e em cada palavra horizontal a primeira letra já está inicialmente preenchida. Essas letras formam uma palavra na vertical.
@@ -270,7 +271,7 @@ Para executar o arquivo de testes, primeiro é necessário instalar a dependênc
 cabal install Test.HUnit
 </pre>
 
-Após isso, simplesmente digite no terminal
+Após isso, simplesmente digite no terminal:
 
 <pre>
 runhaskell Tests.hs
@@ -283,6 +284,8 @@ Abaixo, um vídeo demonstrando o resultado final do projeto.
 <video src="video/demo.mp4" controls width="600">
   Vídeo de demonstração.
 </video>
+
+Caso não seja possível visualizá-lo, entre na pasta `video`, no repositório, e visualize-o por lá.
 
 # Conclusão
 O desenvolvimento deste projeto me permitiu aplicar na prática os conceitos serviços web com Haskell e Scotty. Foram implementadas rotas que lidam tanto com requisições de leitura (GET) quanto de escrita (POST), contemplando os requisitos mínimos do trabalho. Além disso, foi realizada a persistência dos dados em um banco SQLite, viabilizando um *Leaderboard* para registrar e exibir os melhores resultados das jogadas.
