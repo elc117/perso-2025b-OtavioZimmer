@@ -1,3 +1,5 @@
+<!--index.html-->
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -71,7 +73,7 @@
       padding: 15px 30px;
       font-size: 18px;
     }
-    .difficulty-modal {
+    .difficulty-modal, .completion-modal {
       position: fixed;
       top: 0;
       left: 0;
@@ -83,14 +85,14 @@
       align-items: center;
       z-index: 1000;
     }
-    .difficulty-content {
+    .difficulty-content, .completion-content {
       background: white;
       padding: 30px;
       border-radius: 10px;
       text-align: center;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
-    .difficulty-content h3 {
+    .difficulty-content h3, .completion-content h3 {
       margin-top: 0;
       color: #333;
     }
@@ -119,6 +121,43 @@
     }
     .difficulty-btn.dificil:hover {
       background-color: #c82333;
+    }
+    .completion-content {
+      max-width: 400px;
+    }
+    .completion-stats {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+    .completion-stats p {
+      margin: 5px 0;
+      color: #495057;
+    }
+    .name-input {
+      width: 100%;
+      padding: 12px;
+      margin: 15px 0;
+      border: 2px solid #dee2e6;
+      border-radius: 6px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    .name-input:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    .save-btn, .new-game-btn {
+      padding: 12px 30px;
+      font-size: 16px;
+      margin: 5px;
+    }
+    .save-btn {
+      background-color: #28a745;
+    }
+    .save-btn:hover {
+      background-color: #218838;
     }
     .game-content {
       display: flex;
@@ -223,12 +262,13 @@
       <h2>Bem-vindo ao Jogo do Acróstico Cruzado!</h2>
       <p>Descubra as palavras horizontais usando a dica correspondente fornecida.<br>
          A primeira letra de cada palavra forma uma palavra na vertical.</p>
-      <button class="start-btn" onclick="showDifficultyModal()">Iniciar Jogo</button>
+      <button class="start-btn" onclick="showDifficultyModal()">Iniciar Jogo</button><br>
+      <button onclick="showLeaderboard()">Ver Placar</button>
     </div>
     
     <div id="gameArea" class="hidden">
       <div class="controls">
-        <button onclick="showStartScreen()">Novo Jogo</button>
+        <button onclick="backToMenu()">Menu Principal</button>
       </div>
       <div class="game-content">
         <div class="hints" id="hints"></div>
@@ -249,9 +289,49 @@
     </div>
   </div>
 
+  <div id="completionModal" class="completion-modal hidden">
+    <div class="completion-content">
+      <h3>🎉 Parabéns! Você completou o jogo! 🎉</h3>
+      <div class="completion-stats">
+        <p><strong>Tempo:</strong> <span id="completionTime">--:--</span></p>
+        <p><strong>Dificuldade:</strong> <span id="completionDifficulty">--</span></p>
+        <p><strong>Palavras:</strong> <span id="completionWords">--</span></p>
+        <p><strong>Pontuação:</strong> <span id="completionScore">--</span></p>
+      </div>
+      <input type="text" class="name-input" id="playerName" placeholder="Digite seu nome" maxlength="50">
+      <div>
+        <button class="save-btn" onclick="saveResult()">Salvar Resultado</button>
+        <button class="new-game-btn" onclick="newGameFromCompletion()">Novo Jogo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de leaderboard -->
+  <div id="leaderboardModal" class="difficulty-modal hidden">
+    <div class="difficulty-content" style="max-width:500px;">
+      <h3>🏆 TOP 10 JOGADAS</h3>
+      <table id="leaderboardTable" style="width:100%; border-collapse:collapse; margin-top:15px;">
+        <thead>
+          <tr style="background:#f1f1f1;">
+            <th style="text-align:left; padding:8px;">#</th>
+            <th style="text-align:left; padding:8px;">Jogador</th>
+            <th style="text-align:center; padding:8px;">Pontuação</th>
+            <th style="text-align:center; padding:8px;">Tempo</th>
+            <th style="text-align:center; padding:8px;">Dificuldade</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboardBody"></tbody>
+      </table>
+      <br>
+      <button onclick="hideLeaderboard()">Fechar</button>
+    </div>
+  </div>
+
   <script>
     let gameState = null;
     let timerInterval = null;
+    let currentDifficulty = "";
+    let gameCompleted = false;
 
     function startTimer() {
       if (timerInterval) clearInterval(timerInterval);
@@ -280,18 +360,12 @@
       document.getElementById('timer').classList.add('hidden');
     }
 
-    function stopTimer() {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-      document.getElementById('timer').classList.add('hidden');
-    }
-
     function showStartScreen() {
       document.getElementById('startScreen').classList.remove('hidden');
       document.getElementById('gameArea').classList.add('hidden');
+      document.getElementById('completionModal').classList.add('hidden');
       stopTimer(); // Para o cronômetro quando volta ao início
+      gameCompleted = false;
     }
 
     function hideStartScreen() {
@@ -307,9 +381,34 @@
       document.getElementById('difficultyModal').classList.add('hidden');
     }
 
+    function showCompletionModal(elapsed, difficulty, wordCount, score) {
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      document.getElementById('completionTime').textContent = timeString;
+      document.getElementById('completionDifficulty').textContent = formatDifficulty(difficulty);
+      document.getElementById('completionWords').textContent = wordCount;
+      document.getElementById('completionScore').textContent = score;
+      document.getElementById('playerName').value = '';
+      document.getElementById('completionModal').classList.remove('hidden');
+      
+      // Foca no campo de nome
+      setTimeout(() => {
+        document.getElementById('playerName').focus();
+      }, 100);
+    }
+
+    function hideCompletionModal() {
+      document.getElementById('completionModal').classList.add('hidden');
+    }
+
     async function newGameWithDifficulty(diff) {
       stopTimer();
       document.getElementById('timerDisplay').textContent = "00:00";
+      currentDifficulty = diff;
+      gameCompleted = false;
+      
       const res = await fetch("http://localhost:3000/newgame", { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -319,10 +418,98 @@
       renderBoard();
       hideDifficultyModal();
       hideStartScreen();
+      hideCompletionModal();
       startTimer(); // Inicia o cronômetro
     }
 
+    async function newGameFromCompletion() {
+      hideCompletionModal();
+      showDifficultyModal();
+    }
+
+    async function saveResult() {
+      const playerName = document.getElementById('playerName').value.trim();
+      if (!playerName) {
+        alert('Por favor, digite seu nome!');
+        return;
+      }
+
+      const elapsed = parseInt(document.getElementById('completionTime').textContent.split(':')[0]) * 60 + 
+                      parseInt(document.getElementById('completionTime').textContent.split(':')[1]);
+      const wordCount = parseInt(document.getElementById('completionWords').textContent);
+      const gameScore = parseInt(document.getElementById('completionScore').textContent);
+
+      try {
+        const res = await fetch("http://localhost:3000/saveresult", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            playerName: playerName,
+            elapsedTime: elapsed,
+            resultDifficulty: currentDifficulty,
+            wordCount: wordCount,
+            score: gameScore
+          })
+        });
+        
+        if (res.ok) {
+          alert('Resultado salvo com sucesso!');
+          hideCompletionModal();
+          backToMenu();
+        } else {
+          alert('Erro ao salvar resultado!');
+        }
+      } catch (error) {
+        console.error('Erro ao salvar resultado:', error);
+        alert('Erro ao salvar resultado!');
+      }
+    }
+
+    async function showLeaderboard() {
+      try {
+        const res = await fetch("http://localhost:3000/leaderboard");
+        const data = await res.json();
+
+        const tbody = document.getElementById("leaderboardBody");
+        tbody.innerHTML = "";
+
+        data.forEach((entry, index) => {
+          const minutes = Math.floor(entry.leaderTime / 60);
+          const seconds = entry.leaderTime % 60;
+          const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+          // 🥇🥈🥉 medalhas para os 3 primeiros
+          let nameDisplay = entry.leaderName;
+          if (index === 0) nameDisplay = "🥇 " + nameDisplay;
+          else if (index === 1) nameDisplay = "🥈 " + nameDisplay;
+          else if (index === 2) nameDisplay = "🥉 " + nameDisplay;
+
+          const row = `
+            <tr>
+              <td style="padding:8px; text-align:right;">${index + 1}.</td>
+              <td style="padding:8px;">${nameDisplay}</td>
+              <td style="text-align:center; padding:8px;">${entry.leaderScore}</td>
+              <td style="text-align:center; padding:8px;">${timeStr}</td>
+              <td style="text-align:center; padding:8px;">${formatDifficulty(entry.leaderDifficulty)}</td>
+            </tr>
+          `;
+          tbody.innerHTML += row;
+        });
+
+        document.getElementById("leaderboardModal").classList.remove("hidden");
+      } catch (error) {
+        console.error("Erro ao carregar leaderboard:", error);
+        alert("Não foi possível carregar o placar.");
+      }
+    }
+
+    function hideLeaderboard() {
+      document.getElementById("leaderboardModal").classList.add("hidden");
+    }
+    
     async function tryLetter(idx, pos, input) {
+      if (gameCompleted) return; // Impede novas tentativas se o jogo já foi completado
+      
       const letter = input.value.toUpperCase();
       if (!letter) return;
       
@@ -332,57 +519,86 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body)
       });
-      const oldGameState = JSON.parse(JSON.stringify(gameState));
-      gameState = await res.json();
+      const response = await res.json();
       
-      // Verifica se a letra estava correta
-      if (gameState.progress[idx][pos] !== null && oldGameState.progress[idx][pos] === null) {
-        // Letra correta - salva as informações antes de modificar o DOM
-        const cell = input.parentElement;
-        const currentRow = cell.parentElement;
-        const cellsInRow = Array.from(currentRow.querySelectorAll('.cell'));
-        const currentCellIndex = cellsInRow.indexOf(cell);
+      // Verifica se há gameState na resposta (nova estrutura)
+      if (response.gameState) {
+        const oldGameState = JSON.parse(JSON.stringify(gameState));
+        gameState = response.gameState;
         
-        // Atualiza a célula
-        cell.classList.add('correct');
-        cell.innerHTML = ''; // Remove o input
-        cell.textContent = letter; // Coloca a letra
+        // Verifica se o jogo foi completado
+        if (response.completed) {
+          gameCompleted = true;
+          stopTimer();
+          showCompletionModal(response.elapsed, currentDifficulty, response.wordCount, response.score);
+        }
         
-        setTimeout(() => {
-          // Procura próximo input na mesma linha primeiro
-          for (let i = currentCellIndex + 1; i < cellsInRow.length; i++) {
-            const nextInput = cellsInRow[i].querySelector('input');
-            if (nextInput) {
-              nextInput.focus();
-              return;
-            }
-          }
+        // Verifica se a letra estava correta
+        if (gameState.progress[idx][pos] !== null && oldGameState.progress[idx][pos] === null) {
+          // Letra correta
+          const cell = input.parentElement;
+          const currentRow = cell.parentElement;
+          const cellsInRow = Array.from(currentRow.querySelectorAll('.cell'));
+          const currentCellIndex = cellsInRow.indexOf(cell);
           
-          // Se não encontrou na mesma linha, procura na próxima linha disponível
-          const allRows = Array.from(document.querySelectorAll('.row'));
-          for (let rowIndex = idx + 1; rowIndex < allRows.length; rowIndex++) {
-            const firstInput = allRows[rowIndex].querySelector('.cell input');
-            if (firstInput) {
-              firstInput.focus();
-              return;
-            }
-          }
+          cell.classList.add('correct');
+          cell.innerHTML = '';
+          cell.textContent = letter;
           
-          // Se não encontrou nenhum, procura do início
-          const firstAvailableInput = document.querySelector('.cell input');
-          if (firstAvailableInput) {
-            firstAvailableInput.focus();
+          if (!gameCompleted) { // Só move o foco se o jogo não foi completado
+            setTimeout(() => {
+              // Procura próximo input na mesma linha primeiro
+              for (let i = currentCellIndex + 1; i < cellsInRow.length; i++) {
+                const nextInput = cellsInRow[i].querySelector('input');
+                if (nextInput) {
+                  nextInput.focus();
+                  return;
+                }
+              }
+              
+              // Se não encontrou na mesma linha, procura na próxima linha disponível
+              const allRows = Array.from(document.querySelectorAll('.row'));
+              for (let rowIndex = idx + 1; rowIndex < allRows.length; rowIndex++) {
+                const firstInput = allRows[rowIndex].querySelector('.cell input');
+                if (firstInput) {
+                  firstInput.focus();
+                  return;
+                }
+              }
+              
+              // Se não encontrou nenhum, procura do início
+              const firstAvailableInput = document.querySelector('.cell input');
+              if (firstAvailableInput) {
+                firstAvailableInput.focus();
+              }
+            }, 100);
           }
-        }, 100);
+        } else {
+          // Letra incorreta
+          const cell = input.parentElement;
+          cell.classList.add('incorrect');
+          
+          setTimeout(() => {
+            cell.classList.remove('incorrect');
+          }, 1000);
+        }
       } else {
-        // Letra incorreta - aplica feedback visual mas mantém a letra
-        const cell = input.parentElement;
-        cell.classList.add('incorrect');
+        // Formato antigo (fallback)
+        const oldGameState = JSON.parse(JSON.stringify(gameState));
+        gameState = response;
         
-        // Remove o feedback visual após 1 segundo, mas mantém a letra no input
-        setTimeout(() => {
-          cell.classList.remove('incorrect');
-        }, 1000);
+        if (gameState.progress[idx][pos] !== null && oldGameState.progress[idx][pos] === null) {
+          const cell = input.parentElement;
+          cell.classList.add('correct');
+          cell.innerHTML = '';
+          cell.textContent = letter;
+        } else {
+          const cell = input.parentElement;
+          cell.classList.add('incorrect');
+          setTimeout(() => {
+            cell.classList.remove('incorrect');
+          }, 1000);
+        }
       }
     }
 
@@ -453,6 +669,31 @@
         board.appendChild(row);
       });
     }
+
+    function formatDifficulty(diff) {
+      switch(diff.toLowerCase()) {
+        case 'facil': return 'Fácil';
+        case 'medio': return 'Médio';
+        case 'dificil': return 'Difícil';
+        default: return diff;
+      }
+    }
+
+    function backToMenu() {
+      fetch("/reset", { method: "POST" })
+        .then(() => {
+          showStartScreen();
+        });
+    }
+
+    // Permite enviar o nome com Enter
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('playerName').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          saveResult();
+        }
+      });
+    });
 
     // Mostra tela de início
     showStartScreen();

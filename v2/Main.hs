@@ -1,3 +1,5 @@
+-- Main.hs
+
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
@@ -12,7 +14,11 @@ import qualified Data.Text.Lazy as T
 import Web.Scotty (file)
 import Words (Entry(..), entries)
 import Data.Time (UTCTime, getCurrentTime, diffUTCTime)
+-- SQLite imports
+import Database.SQLite.Simple
+import Database.SQLite.Simple.FromRow
 
+-- Estrutura base, com a palavra vertical e as palavras horizontais
 data Acrostic = Acrostic
   { vertical    :: Entry
   , horizontals :: [Entry]
@@ -24,8 +30,9 @@ instance ToJSON Acrostic
 data GameState = GameState
   { verticalWord :: Entry
   , horizontalsW :: [Entry]
-  , progress     :: [[Maybe Char]] -- progresso de cada palavra
+  , progress     :: [[Maybe Char]] -- progresso de cada palavra (cada pos. pode ser a letra ou null)
   , startTime    :: UTCTime        -- tempo de início do jogo
+  , gameDifficulty :: String       -- dificuldade do jogo atual
   } deriving (Generic, Show)
 
 instance ToJSON GameState
@@ -46,6 +53,31 @@ data Try = Try
 
 instance FromJSON Try
 
+-- Nova estrutura para salvar resultado
+data GameResult = GameResult
+  { playerName :: String
+  , elapsedTime :: Int
+  , resultDifficulty :: String
+  , wordCount :: Int
+  , score :: Int
+  } deriving (Show, Generic)
+
+instance FromJSON GameResult
+instance ToJSON GameResult
+
+-- Estrutura para exibir a leaderboard
+data LeaderboardEntry = LeaderboardEntry
+  { leaderName :: String
+  , leaderTime :: Int
+  , leaderDifficulty :: String
+  , leaderWordCount :: Int
+  , leaderScore :: Int
+  } deriving (Show, Generic)
+
+instance ToJSON LeaderboardEntry
+instance FromRow LeaderboardEntry where
+  fromRow = LeaderboardEntry <$> field <*> field <*> field <*> field <*> field
+
 -- Função que sorteia uma palavra vertical baseada na dificuldade
 randomVertical :: String -> IO Entry
 randomVertical diff = do
@@ -65,7 +97,7 @@ randomVertical diff = do
 -- Seleciona horizontais a partir das letras da vertical
 selectHorizontals :: String -> Entry -> IO [Entry]
 selectHorizontals verticalStr verticalEntry =
-  go verticalStr []  -- começa sem palavras já usadas
+  go verticalStr []  -- começa sem palavras já "usadas"
   where
     go [] _ = return []
     go (c:cs) used = do
@@ -92,7 +124,7 @@ newGame diff = do
   let prog = zipWith (\e c -> Just c : replicate (length (word e) - 1) Nothing)
                      hs
                      (word v)
-  return (GameState v hs prog currentTime)
+  return (GameState v hs prog currentTime diff)
 
 -- Atualiza progresso com tentativa
 applyTry :: GameState -> Try -> GameState
@@ -119,7 +151,7 @@ applyTry gs t =
 updateChar :: Int -> Char -> [Maybe Char] -> [Maybe Char]
 updateChar _ _ [] = []
 updateChar 0 newChar (_:xs) = Just newChar : xs
-updateChar n newChar (x:xs) = x : updateChar (n-1) newChar xs
+updateChar n newChar (x:xs) = x : updateChar (n-1) newChar xs -- Optei por usar pattern matching com recursão
 
 -- Função para atualizar uma palavra na lista de palavras
 updateWord :: Int -> [Maybe Char] -> [[Maybe Char]] -> [[Maybe Char]]
@@ -127,10 +159,40 @@ updateWord _ _ [] = []
 updateWord 0 newWord (x:xs) = newWord : xs
 updateWord n newWord (x:xs) = x : updateWord (n-1) newWord xs
 
+-- Função para calcular pontuação
+calculateScore :: String -> Int -> Int -> Int
+calculateScore difficulty wordCount elapsedTime =
+  let difficultyPoints = case difficulty of
+        "facil" -> 100
+        "medio" -> 200
+        "dificil" -> 300
+        _ -> 100
+      wordPoints = wordCount * 50
+      timePenalty = elapsedTime
+      baseScore = difficultyPoints + wordPoints - timePenalty
+  in max 50 baseScore -- Garante uma pontuação mínima de 50
+
+-- Função para verificar se o jogo está completo
+isGameComplete :: GameState -> Bool
+isGameComplete gs = all (all (/= Nothing)) (progress gs)
+
+-- Inicializar o banco de dados do jogo
+initDB :: Connection -> IO ()
+initDB conn = execute_ conn "CREATE TABLE IF NOT EXISTS game_results (\
+  \ id INTEGER PRIMARY KEY AUTOINCREMENT,\
+  \ player_name TEXT NOT NULL,\
+  \ elapsed_time INTEGER NOT NULL,\
+  \ difficulty TEXT NOT NULL,\
+  \ word_count INTEGER NOT NULL,\
+  \ score INTEGER NOT NULL,\
+  \ created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+
 -- Função principal
 main :: IO ()
 main = do
   stateRef <- newIORef Nothing  -- inicia sem jogo
+  conn <- open "acrostic.db"
+  initDB conn
   scotty 3000 $ do
     middleware logStdoutDev
 
@@ -138,7 +200,7 @@ main = do
     get "/" $ file "index.html"
 
     -- API
-    get "/acrostico" $ do
+    get "/acrostic" $ do
       maybeGs <- liftIO (readIORef stateRef)
       case maybeGs of
         Just gs -> json gs
@@ -151,8 +213,8 @@ main = do
         Just gs -> do
           currentTime <- liftIO getCurrentTime
           let elapsed = floor $ diffUTCTime currentTime (startTime gs)
-          json (object ["elapsed" .= (elapsed :: Integer)])
-        Nothing -> json (object ["elapsed" .= (0 :: Integer)])
+          json (object ["elapsed" .= (elapsed :: Int)])
+        Nothing -> json (object ["elapsed" .= (0 :: Int)])
 
     post "/try" $ do
       t <- jsonData :: ActionM Try
@@ -161,7 +223,19 @@ main = do
         Just gs -> do
           let newGs = applyTry gs t
           liftIO (writeIORef stateRef (Just newGs))
-          json newGs
+          -- Verifica se o jogo foi completado
+          if isGameComplete newGs
+            then do
+              currentTime <- liftIO getCurrentTime
+              let elapsed = floor $ diffUTCTime currentTime (startTime newGs)
+              let wordCount = length (horizontalsW newGs)
+              let gameScore = calculateScore (gameDifficulty newGs) wordCount elapsed
+              json (object ["gameState" .= newGs, 
+                           "completed" .= True,
+                           "elapsed" .= (elapsed :: Int),
+                           "wordCount" .= wordCount,
+                           "score" .= gameScore])
+            else json (object ["gameState" .= newGs, "completed" .= False])
         Nothing -> json (object []) -- sem jogo ativo
 
     post "/newgame" $ do
@@ -169,3 +243,24 @@ main = do
       gs <- liftIO (newGame (difficulty d))
       liftIO (writeIORef stateRef (Just gs))
       json gs
+
+    -- Rota para salvar resultado
+    post "/saveresult" $ do
+      result <- jsonData :: ActionM GameResult
+      liftIO $ execute conn 
+        "INSERT INTO game_results (player_name, elapsed_time, difficulty, word_count, score) VALUES (?, ?, ?, ?, ?)" 
+        (playerName result, elapsedTime result, resultDifficulty result, wordCount result, score result)
+      json (object ["success" .= True])
+    
+    -- Rota para obter leaderboard
+    get "/leaderboard" $ do
+      results <- liftIO (query_ conn
+        "SELECT player_name, elapsed_time, difficulty, word_count, score \
+        \FROM game_results ORDER BY score DESC LIMIT 10"
+        :: IO [LeaderboardEntry])
+      json results
+
+    -- Rota para resetar o estado (quando volta para o Menu Principal)
+    post "/reset" $ do
+      liftIO (writeIORef stateRef Nothing)
+      json (object ["reset" .= True])
