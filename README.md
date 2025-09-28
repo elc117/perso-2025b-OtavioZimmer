@@ -167,13 +167,13 @@ entries =
   ...
 </pre>
 
-Ele criou as palavras que podem ser visualizadas no arquivo `Words.hs`. Então, para obter essas palavras no jogo, utilizei funções disponibilizadas pelo System Random do Haskell. Apliquei funções auxiliares para selecionar uma palavra vertical e uma palavra horizontal para cada uma das letras da vertical. Por exemplo, se a função selecionou aleatoriamente "RIO" para a palavra vertical, ela irá selecionar aleatoriamente uma palavra que começa com "R", uma que começa com "I", e outra que começa com "O", todas na horizontal. Tive que tratar os casos de palavras que iniciam com as letras "K", "W" e "Y", que são letras as quais não iniciam palavras na língua portuguesa. Para essa parte enfrentei alguns problemas, como a criação de palavras incorretas por parte da IA Generativa (palavras escritas de maneira errada, em outros idiomas, entre outras coisas). Também foi um pouco trabalhoso criar a função que identificasse a letra da vertical e, com isso, gerasse uma horizontal que iniciasse com aquela letra em específico. Quando tudo estava pronto, testei com
+Ele criou as palavras que podem ser visualizadas no arquivo `Words.hs`. Então, para obter essas palavras no jogo, utilizei funções disponibilizadas pelo System Random do Haskell. Apliquei funções auxiliares para selecionar uma palavra vertical e uma palavra horizontal para cada uma das letras da vertical. Por exemplo, se a função selecionou aleatoriamente "RIO" para a palavra vertical, ela irá selecionar aleatoriamente uma palavra que começa com "R", uma que começa com "I", e outra que começa com "O", todas na horizontal. Tive que tratar os casos de palavras que iniciam com as letras "K", "W" e "Y", que são letras as quais não iniciam palavras na língua portuguesa. Para essa parte enfrentei alguns problemas, como a criação de palavras incorretas por parte da IA Generativa (palavras escritas de maneira errada, em outros idiomas, entre outras coisas). Também foi um pouco trabalhoso criar a função que identificasse a letra da vertical e, com isso, gerasse uma horizontal que iniciasse com aquela letra em específico. Quando tudo estava pronto, testei com:
 
 <pre>
 curl http://localhost:3000/acrostic
 </pre>
 
-Foi exibido na tela, por meio do GET, as palavras geradas aleatoriamente pelo programa, já estruturadas com as dicas e no formato JSON.
+Foi exibido na tela, por meio do GET, as palavras geradas aleatoriamente pelo programa, já estruturadas com as dicas e no formato JSON. Com isso, a API para "puxar" as palavras e suas dicas estava pronta.
 
 ## 4. Frontend
 Depois de feito tudo isso, decidi implementar um frontend para o projeto. Esta talvez tenha sido a parte mais difícil de todas, pois envolveu muitos testes e correção de problemas em relação a alinhamento e inputs. Criei um arquivo `index.html` e adicionei um pouco de HTML, JavaScript e CSS. Aos poucos, fui deixando-o mais estilizado e fluido. A parte mais difícil foi alinhar dinamicamente as dicas, à esquerda da tela e as palavras em si, uma abaixo da outra e dentro do "quadrado" estipulado para a área do jogo. Implementei um sistema de inputs, onde ele reconhece qual o index da letra está selecionado e, ao digitar a letra, isso é enviado como um POST em tempo real para verificar se a letra está certa naquela posição. Caso esteja, completa a posição na variável `progress`, mostrada anteriormente. Implementei um sistema de "feedback visual", onde ao selecionar um quadradinho para input, ele muda a cor de fundo deste para amarelo, ao acertar a letra da posição, ele muda a cor do fundo para verde e trava o input para impedir digitação, e ao escrever uma letra errada na posição, o fundo fica vermelho por um pequeno tempo, indicando erro.
@@ -308,4 +308,4 @@ Abaixo, listo as fontes utilizadas para realizar o projeto.
 - Recursão em Haskell: https://learnyouahaskell.com/recursion
 - Pattern Matching: https://learnyouahaskell.com/syntax-in-functions
 - SQLite.Simple: https://hackage.haskell.org/package/sqlite-simple/docs/Database-SQLite-Simple.html
-- Claude AI (utilizado para gerar a API das palavras e dicas, no formato estipulado): https://claude.ai
+- Claude AI (utilizado para gerar as palavras e suas dicas, no formato estipulado): https://claude.ai
