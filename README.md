@@ -51,7 +51,7 @@ Caso obtenha problemas ao instalar as dependências por meio do `cabal build`, s
 <pre>
 cabal update
 cabal install scotty
-cabal install wai-middleware-request-logger
+cabal install wai-extra
 cabal install aeson
 cabal install random
 cabal install time
@@ -309,5 +309,6 @@ Abaixo, listo as fontes utilizadas para realizar o projeto.
 - System.Random: https://hackage.haskell.org/package/random/docs/System-Random.html
 - Recursão em Haskell: https://learnyouahaskell.com/recursion
 - Pattern Matching: https://learnyouahaskell.com/syntax-in-functions
+- Data.Time.Clock: https://hackage-content.haskell.org/package/time-1.15/docs/Data-Time-Clock.html
 - SQLite.Simple: https://hackage.haskell.org/package/sqlite-simple/docs/Database-SQLite-Simple.html
 - Claude AI (utilizado para gerar as palavras e suas dicas, no formato estipulado): https://claude.ai
