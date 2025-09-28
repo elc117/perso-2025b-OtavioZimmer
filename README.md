@@ -41,6 +41,7 @@ cabal build
 cabal run projeto
 </pre>
 4. Abra o jogo no navegador, digitando `http://localhost:3000`. A página `index.html` (frontend) será servida automaticamente.
+5. Para parar, aperte `CTRL + C` no terminal que está executando o servidor.
 
 ## Orientações para execução (MODO 2)
 Caso obtenha problemas ao instalar as dependências por meio do `cabal build`, segue, abaixo a alternativa:
@@ -63,6 +64,7 @@ ghc --make Main.hs GameLogic.hs -o jogo
 </pre>
 4. Rode o servidor com `./jogo` ou `jogo.exe`.
 5. Abra o jogo no navegador, digitando `http://localhost:3000`. A página `index.html` (frontend) será servida automaticamente.
+6. Para parar, aperte `CTRL + C` no terminal que está executando o servidor.
 
 # Ideia
 Inicialmente, fiquei em dúvida do que fazer. Depois de muito pensar, de repente visualizo minha mãe jogando um joguinho em seu celular. Então tive uma ideia: lembrei que ela gostava muito de jogar um jogo de celular chamado "Cody Cross". Com isso, decidi implementar um jogo de Acróstico Cruzado. É um jogo divertido, o qual eu gosto de jogar e que pode ser jogado por pessoas de qualquer idade. A lógica do jogo é a seguinte: há algumas palavras na horizontal para serem respondidas com base em dicas, e em cada palavra horizontal a primeira letra já está inicialmente preenchida. Essas letras formam uma palavra na vertical.
