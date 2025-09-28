@@ -211,7 +211,7 @@ Nesta mesma atualização, também adicionei um sistema de relógio, que envia d
 
 O sistema permite escolher 3 tipos diferentes de dificuldade: "Fácil", "Médio" e "Difícil". Quando escolhida a dificuldade "Fácil", o jogo gera até 4 palavras horizontais para serem respondidas. Quando escolhida a dificuldade "Médio", o jogo gera de 5 a 7 palavras horizontais para serem respondidas. E, quando escolhida a dificuldade "Difícil", o jogo gera mais de 7 palavras horizontais para serem respondidas. Tive que alterar a função de geração de palavra vertical, para se adaptar à dificuldade escolhida pelo jogador.
 
-Nesta mesma atualização, também adicionei um sistema de relógio (rota `/time`), que envia do backend para o frontend o "time elapsed" de jogo, para mostrar quanto tempo o jogador está levando para completar todas as palavras, e uma tela inicial, explicando o funcionamento do jogo e com um botão para iniciar um Novo Jogo. Tive bastante trabalho para implementar o relógio a partir do backend. Inicialmente, havia implementado ele diretamente pelo frontend, mas achei melhor alterar isto para permitir que quem enviasse a informação do tempo decorrido fosse justamente o servidor backend.
+Nesta mesma atualização, também adicionei um sistema de relógio (rota `/time`, com GET), que envia do backend para o frontend o "time elapsed" de jogo, para mostrar quanto tempo o jogador está levando para completar todas as palavras, e uma tela inicial, explicando o funcionamento do jogo e com um botão para iniciar um Novo Jogo. Tive bastante trabalho para implementar o relógio a partir do backend. Inicialmente, havia implementado ele diretamente pelo frontend, mas achei melhor alterar isto para permitir que quem enviasse a informação do tempo decorrido fosse justamente o servidor backend.
 
 ![Seleção de Dificuldade](images/difficultySelection.png)
 
@@ -248,7 +248,7 @@ Penalidade de Tempo = tempo decorrido em segundos levado para completar a jogada
 
 Para que o jogador não ficasse com pontuação 0 caso levasse muito tempo para completar a Jogada, delimitei um mínimo de 50 pontos para uma Jogada, independentemente de qualquer acontecimento.
 
-Para isso, foi criada a rota `/saveresult`, com tudo configurado para gerar o resultado da jogada corretamente com todas as informações necessárias. Nesse sentido, adicionei uma espécie de *Leaderboard*, que mostra as 10 maiores pontuações registradas (rota `/leaderboard`), com o nome do jogador, o tempo levado para completar a Jogada e a dificuldade escolhida. Fiz as alterações necessárias no frontend para suportar todas essas mudanças, como pode-se visualizar abaixo:
+Para isso, foi criada a rota `/saveresult` (POST), com tudo configurado para gerar o resultado da jogada corretamente com todas as informações necessárias. Nesse sentido, adicionei uma espécie de *Leaderboard*, que mostra as 10 maiores pontuações registradas (rota `/leaderboard`, com GET), com o nome do jogador, o tempo levado para completar a Jogada e a dificuldade escolhida. Fiz as alterações necessárias no frontend para suportar todas essas mudanças, como pode-se visualizar abaixo:
 
 ![Tela Salvar Resultado](images/saveResult.png)
 
