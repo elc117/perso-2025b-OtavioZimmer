@@ -1,0 +1,36 @@
+cabal-version:      2.2
+name:               projeto
+version:            0.1.0.0
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             Otavio
+maintainer:         otaviokrugelzimmer@gmail.com
+category:           Web
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md
+
+common warnings
+  ghc-options: -Wall
+
+executable projeto
+  import:           warnings
+  main-is:          Main.hs
+  build-depends:    base ^>=4.18.3.0,
+                    scotty,
+                    aeson,
+                    random,
+                    wai-middleware-request-logger,
+                    time,
+                    sqlite-simple,
+                    text
+  hs-source-dirs:   exe
+  default-language: GHC2021
+
+test-suite tests
+  type:             exitcode-stdio-1.0
+  main-is:          Tests.hs
+  build-depends:    base ^>=4.18.3.0,
+                    HUnit,
+                    projeto
+  hs-source-dirs:   test
+  default-language: GHC2021
