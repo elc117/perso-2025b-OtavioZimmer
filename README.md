@@ -307,7 +307,7 @@ Além do escopo básico, o projeto foi enriquecido com funcionalidades adicionai
 Conclui-se, portanto, que o objetivo do trabalho foi atingido, atendendo aos requisitos definidos e explorando diversas possibilidades de personalização. O projeto resultou em um jogo funcional, divertido e extensível, o que mostra como a biblioteca Scotty pode ser utilizada de diversas formas criativas para construir aplicações web mais robustas em Haskell.
 
 # Fontes
-Abaixo, listo as fontes utilizadas para realizar o projeto.
+Abaixo, listo as fontes consultadas para a realização do projeto.
 - Scotty: https://hackage.haskell.org/package/scotty
 - json: https://hackage.haskell.org/package/scotty/docs/Web-Scotty.html#v:json
 - jsonData: https://hackage.haskell.org/package/scotty/docs/Web-Scotty.html#v:jsonData
