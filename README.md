@@ -264,10 +264,21 @@ Acima, o *Leaderboard* das 10 melhores Jogadas.
 
 Este foi o último passo realizado na criação do projeto.
 
-## 7. Otimização
-Por último, decidi otimizar o projeto, criando um arquivo separado só para as funções (`GameLogic.hs`), deixando o `Main.hs` cuidar apenas das requisições `GET` e `POST`, com a lógica de jogo no outro arquivo. Isso ajudou muito para que eu pudesse criar o `Tests.hs`, ficando mais fácil de fazer os testes unitários de cada uma das funções que controlam a lógica do jogo.
+## 7. Garantia de adequação do projeto
+Por último, terminei de implementar a "otimização" do projeto, com um arquivo só para as funções (`GameLogic.hs`), deixando o `Main.hs` cuidar apenas das requisições `GET` e `POST`, com a lógica de jogo no outro arquivo (o que era um dos objetivos/requisitos do trabalho). Isso foi essencial para que pudesse ser realizada a implementação do `Tests.hs`, pois desse modo é mais fácil e menos confuso de fazer os testes unitários de cada uma das funções que controlam a lógica do jogo.
 
 # Testes
+O arquivo Tests.hs contém uma série de testes automatizados utilizando a biblioteca HUnit, que serve para validar o comportamento das funções principais do jogo. O objetivo é garantir que a lógica implementada funcione conforme o esperado nos diferentes cenários. Todas as funções que ditam a lógica do jogo foram testadas:
+- `updateChar` e `updateWord` (funções básicas);
+- `applyTry`, `calculateScore` e `isGameComplete` (funções de "regras" do jogo);
+- `randomVertical` e `selectHorizontals` (funções de geração aleatória das palavras);
+- `newGame` (função de inicialização do jogo).
+
+Todos os testes estão agrupados em tests, e o main executa a série completa, exibindo no terminal quantos testes passaram, falharam ou foram ignorados.
+
+Após rodar os testes, obtive sucesso em todos eles.
+
+### Como executar o arquivo `Tests.hs`
 Para executar o arquivo de testes, primeiro é necessário instalar a dependência HUnit, da seguinte maneira:
 
 <pre>
@@ -279,10 +290,6 @@ Após isso, simplesmente digite no terminal:
 <pre>
 runhaskell Tests.hs
 </pre>
-
-Os testes unitários irão ser executados em cada uma das funções.
-
-Após rodar os testes, obtive sucesso em todos eles.
 
 # Resultado final
 Abaixo, um vídeo demonstrando o resultado final do projeto.
