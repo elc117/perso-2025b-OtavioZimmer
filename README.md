@@ -331,6 +331,8 @@ Ela percorreria letra a letra da horizontal para verificar se alguma delas se en
 
 Então desmembrando esse problema em partes, faria verificações: caso percorresse todas as letras e nenhuma se encaixasse com a letra da palavra vertical, faria o sorteio de uma nova horizontal, até que encontrasse uma horizontal que pudesse ser encaixada na vertical. Ou seja, uma horizontal que, em alguma posição (letra) contesse a mesma letra da letra em questão da palavra vertical.
 
+Com isso, de um modo geral, teria que adicionar e modificar poucas coisas, pois fiz as funções de uma forma mais genérica, a qual se adequaria para essa mudança de parte da lógica do jogo, já pensando nesta futura implementação.
+
 # Conclusão
 O desenvolvimento deste projeto me permitiu aplicar na prática os conceitos serviços web com Haskell e Scotty. Foram implementadas rotas que lidam tanto com requisições de leitura (GET) quanto de escrita (POST), contemplando os requisitos mínimos do trabalho. Além disso, foi realizada a persistência dos dados em um banco SQLite, viabilizando um *Leaderboard* para registrar e exibir os melhores resultados das jogadas.
 
