@@ -297,7 +297,39 @@ Abaixo, um vídeo demonstrando o resultado final do projeto.
   Vídeo de demonstração.
 </video>
 
-Caso não seja possível visualizá-lo, entre na pasta `video`, no repositório, e visualize-o por lá. Ou, se preferir, visualize-o no seguinte link: https://drive.google.com/file/d/1kr6WkQz7gMRW-xTfDLqLiHWu0gWSAKvf/view?usp=sharing.
+Caso não seja possível visualizá-lo, entre na pasta `video`, no repositório, e visualize-o por lá. Ou, caso prefira, visualize-o no seguinte link: https://drive.google.com/file/d/1kr6WkQz7gMRW-xTfDLqLiHWu0gWSAKvf/view?usp=sharing.
+
+# Futuras Implementações
+Como implementações implementação futura, poderia modificar um pouco a lógica do jogo para que, em vez da palavra vertical representar sempre a primeira letra de cada horizontal, ela representar dinamicamente uma letra da horizontal. Por exemplo, se a palavra vertical sorteada fosse "RIO", a primeira horizontal poderia ser "ESCREVER", de modo que o "R" já viesse preenchido, na 4ª posição da palavra "ESCREVER". Assim como a segunda poderia ser "PEDIR", de modo que a penúltima letra dela, o "I", já viesse preenchido para essa palavra, e assim por diante. Para essa implementação, teria de adicionar uma espécie de "lista paralela de posições", algo nesse tipo:
+
+<pre>
+data GameState = GameState
+  { verticalWord :: Entry
+  , horizontalsW :: [Entry]
+  , horizPos     :: [Int]        -- posição de cruzamento de cada horizontal
+  , progress     :: [[Maybe Char]]
+  , startTime    :: UTCTime
+  , gameDifficulty :: String
+  }
+</pre>
+
+Com isso, daria para criar uma função mais ou menos assim:
+
+<pre>
+-- para cada letra da palavra vertical dentro da horizontal escolhida
+findCrossPositions :: String -> [Entry] -> [Int]
+findCrossPositions vWord horizontals =
+  zipWith findPos vWord horizontals
+  where
+    findPos c horiz =
+      case elemIndex c (word horiz) of
+        Just pos -> pos
+        Nothing  -> -1  -- se não encaixar, marca como inválido
+</pre>
+
+Ela percorreria letra a letra da horizontal para verificar se alguma delas se encaixa com a letra em questão da vertical. Caso se encaixe, dá um "set" nessa posição. Caso não se encaixe, marca como inválida.
+
+Então desmembrando esse problema em partes, faria verificações: caso percorresse todas as letras e nenhuma se encaixasse com a letra da palavra vertical, faria o sorteio de uma nova horizontal, até que encontrasse uma horizontal que pudesse ser encaixada na vertical. Ou seja, uma horizontal que, em alguma posição (letra) contesse a mesma letra da letra em questão da palavra vertical.
 
 # Conclusão
 O desenvolvimento deste projeto me permitiu aplicar na prática os conceitos serviços web com Haskell e Scotty. Foram implementadas rotas que lidam tanto com requisições de leitura (GET) quanto de escrita (POST), contemplando os requisitos mínimos do trabalho. Além disso, foi realizada a persistência dos dados em um banco SQLite, viabilizando um *Leaderboard* para registrar e exibir os melhores resultados das jogadas.
