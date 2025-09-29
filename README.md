@@ -300,7 +300,7 @@ Abaixo, um vídeo demonstrando o resultado final do projeto.
 Caso não seja possível visualizá-lo, entre na pasta `video`, no repositório, e visualize-o por lá. Ou, caso prefira, visualize-o no seguinte link: https://drive.google.com/file/d/1kr6WkQz7gMRW-xTfDLqLiHWu0gWSAKvf/view?usp=sharing.
 
 # Futuras implementações
-Como implementação futura, poderia modificar um pouco a lógica do jogo para que, em vez da palavra vertical representar sempre a primeira letra de cada horizontal, ela representar dinamicamente uma letra da horizontal. Por exemplo, se a palavra vertical sorteada fosse "RIO", a primeira horizontal poderia ser "ESCREVER", de modo que o "R" já viesse preenchido, na 4ª posição da palavra "ESCREVER". Assim como a segunda poderia ser "PEDIR", de modo que a penúltima letra dela, o "I", já viesse preenchido para essa palavra, e assim por diante. Para essa implementação, teria de adicionar uma espécie de "lista paralela de posições", algo nesse tipo:
+Como implementação futura, poderia modificar parte da lógica do jogo para que, em vez da palavra vertical representar sempre a primeira letra de cada horizontal, ela representar dinamicamente uma letra da horizontal. Por exemplo, se a palavra vertical sorteada fosse "RIO", a primeira horizontal poderia ser "ESCREVER", de modo que o "R" já viesse preenchido, na 4ª posição da palavra "ESCREVER". Assim como a segunda poderia ser "PEDIR", de modo que a penúltima letra dela, o "I", já viesse preenchido para essa palavra, e assim por diante. Para essa implementação, teria de adicionar uma espécie de "lista paralela de posições", algo nesse tipo:
 
 <pre>
 data GameState = GameState
