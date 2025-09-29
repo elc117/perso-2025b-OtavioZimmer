@@ -21,12 +21,12 @@ module GameLogic
   ) where
 
 import System.Random (randomRIO)
-import Data.Aeson (FromJSON, ToJSON, object, (.=))
+import Data.Aeson (FromJSON, ToJSON)
 import GHC.Generics (Generic)
 import Words (Entry(..), entries)
-import Data.Time (UTCTime, getCurrentTime, diffUTCTime)
+import Data.Time (UTCTime, getCurrentTime)
 import Database.SQLite.Simple
-import Database.SQLite.Simple.FromRow
+import Database.SQLite.Simple.FromRow ()
 
 -- Estrutura base, com a palavra vertical e as palavras horizontais
 data Acrostic = Acrostic
